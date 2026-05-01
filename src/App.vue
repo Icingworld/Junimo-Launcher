@@ -22,6 +22,7 @@ body {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
   color: #0f0f0f;
   background-color: #f6f6f6;
+  overflow: hidden;
 }
 
 /* Element Plus tooltip: remove fade in/out delays */

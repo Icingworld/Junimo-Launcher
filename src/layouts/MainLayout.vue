@@ -23,16 +23,19 @@ function toggleSidebar() {
     </aside>
 
     <main class="content" aria-label="主体内容">
-      <ElScrollbar class="scroll">
+      <div class="contentInner">
         <RouterView />
-      </ElScrollbar>
+      </div>
     </main>
   </div>
 </template>
 
 <style scoped>
 .layout {
-  height: 100%;
+  height: 100vh;
+  height: 100dvh;
+  width: 100vw;
+  width: 100dvw;
   display: grid;
   grid-template-columns: auto 1fr;
   min-width: 0;
@@ -58,11 +61,20 @@ function toggleSidebar() {
 
 .content {
   min-width: 0;
+  box-sizing: border-box;
+  height: 100%;
+  width: 100%;
   padding: 20px;
+  overflow: auto;
+  display: flex;
 }
 
-.scroll {
-  height: 100%;
+.contentInner {
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
+  min-height: 100%;
+  width: 100%;
 }
 
 @media (prefers-color-scheme: dark) {
