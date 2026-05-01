@@ -1,6 +1,7 @@
 //! 游戏启动命令模块
 
 use tauri::command;
+use tauri::Manager;
 
 
 /// 启动游戏
@@ -25,10 +26,15 @@ use tauri::command;
 /// ```
 /// 
 #[command]
-pub async fn start_game() -> Result<(), String> {
+pub async fn start_game(app: tauri::AppHandle) -> Result<(), String> {
     let url = "steam://run/413150";
     // 使用 opener 打开游戏
     opener::open(url).map_err(|e| e.to_string())?;
+
+    // 启动成功后将主窗口隐藏到托盘
+    if let Some(win) = app.get_webview_window("main") {
+        let _ = win.hide();
+    }
 
     Ok(())
 }

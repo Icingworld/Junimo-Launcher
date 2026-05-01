@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import SidebarMenu from "../components/SidebarMenu.vue";
+import { useRoute } from "vue-router";
 
 const isSidebarCollapsed = ref(false);
 
 function toggleSidebar() {
   isSidebarCollapsed.value = !isSidebarCollapsed.value;
 }
+
+const route = useRoute();
+const isStart = computed(() => route.name === "start");
 </script>
 
 <template>
@@ -22,7 +26,7 @@ function toggleSidebar() {
       </div>
     </aside>
 
-    <main class="content" aria-label="主体内容">
+    <main class="content" :class="{ start: isStart }" aria-label="主体内容">
       <div class="contentInner">
         <RouterView />
       </div>
@@ -32,10 +36,8 @@ function toggleSidebar() {
 
 <style scoped>
 .layout {
-  height: 100vh;
-  height: 100dvh;
-  width: 100vw;
-  width: 100dvw;
+  height: 100%;
+  width: 100%;
   display: grid;
   grid-template-columns: auto 1fr;
   min-width: 0;
@@ -67,6 +69,11 @@ function toggleSidebar() {
   padding: 20px;
   overflow: auto;
   display: flex;
+}
+
+.content.start {
+  padding: 0;
+  overflow: hidden;
 }
 
 .contentInner {

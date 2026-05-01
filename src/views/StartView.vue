@@ -1,5 +1,5 @@
 <template>
-  <section class="page" aria-label="主页面">
+  <section ref="pageEl" class="page" aria-label="主页面">
     <div class="bg" />
 
     <div class="content">
@@ -7,7 +7,7 @@
       <p class="desc">一键启动星露谷物语</p>
     </div>
 
-    <div class="actions">
+    <div ref="actionsEl" class="actions">
       <button class="start" type="button" :disabled="starting" @click="onStart">
         {{ starting ? "启动中…" : "开始游戏" }}
       </button>
@@ -18,10 +18,12 @@
 
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/core";
-import { ref } from "vue";
+import { nextTick, onMounted, ref } from "vue";
 
 const starting = ref(false);
 const error = ref<string | null>(null);
+const pageEl = ref<HTMLElement | null>(null);
+const actionsEl = ref<HTMLElement | null>(null);
 
 async function onStart() {
   if (starting.value) return;
@@ -36,15 +38,34 @@ async function onStart() {
     starting.value = false;
   }
 }
+
+onMounted(async () => {
+  if (!import.meta.env.DEV) return;
+  await nextTick();
+  const page = pageEl.value;
+  const actions = actionsEl.value;
+  if (!page || !actions) return;
+
+  const pageRect = page.getBoundingClientRect();
+  const actionsRect = actions.getBoundingClientRect();
+  const actionsStyle = window.getComputedStyle(actions);
+
+  // 这段日志用于对比 Web(1420) 与 Tauri WebView 的布局差异
+  console.log("[StartView layout]", {
+    viewport: { innerWidth: window.innerWidth, innerHeight: window.innerHeight, dpr: window.devicePixelRatio },
+    pageRect: { top: pageRect.top, left: pageRect.left, width: pageRect.width, height: pageRect.height },
+    actionsRect: { top: actionsRect.top, left: actionsRect.left, width: actionsRect.width, height: actionsRect.height },
+    actionsComputed: { right: actionsStyle.right, bottom: actionsStyle.bottom, position: actionsStyle.position },
+  });
+});
 </script>
 
 <style scoped>
 .page {
   position: relative;
-  margin: -20px;
-  width: calc(100% + 40px);
-  height: calc(100% + 40px);
-  min-height: calc(100% + 40px);
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
   overflow: hidden;
   border-radius: 0;
 }
@@ -84,8 +105,9 @@ async function onStart() {
 
 .actions {
   position: absolute;
-  right: 28px;
-  bottom: 28px;
+  z-index: 2;
+  right: calc(28px + env(safe-area-inset-right, 0px));
+  bottom: calc(28px + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   align-items: flex-end;
