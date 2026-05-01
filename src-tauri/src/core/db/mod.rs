@@ -1,4 +1,6 @@
 //! 核心数据库模块
 
-// core/db/db.rs: 数据库连接池
 pub mod db;
+pub mod init;
+
+pub use db::init_sqlite_pool;

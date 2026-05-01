@@ -1,6 +1,6 @@
 //! 初始化数据库结构和数据
 
-use crate::core::db::init_sqlite_pool;
+use sqlx::SqlitePool;
 
 
 /// 初始化数据库结构和数据
@@ -41,45 +41,28 @@ pub async fn init_db(pool: &SqlitePool) -> Result<(), sqlx::Error> {
     .execute(pool)
     .await?;
 
-    // 2. 模组分组表
-    sqlx::query(
-        r#"
-        CREATE TABLE IF NOT EXISTS t_mod_groups (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL
-        );
-        "#
-    )
-    .execute(pool)
-    .await?;
-
-    // 3. 模组表，存储模组中 manifest.json 文件的内容
+    // 2. 模组表
     sqlx::query(
         r#"
         CREATE TABLE IF NOT EXISTS t_mods (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            author TEXT NOT NULL,
-            version TEXT NOT NULL,
-            description TEXT NOT NULL,
-            unique_id TEXT NOT NULL,
-            entry_dll TEXT NOT NULL,
-            minimum_api_version TEXT NOT NULL,
-            update_keys TEXT NOT NULL
-        );
-        "#
-    )
-    .execute(pool)
-    .await?;
 
-    // 4. 模组分组与模组的关系表
-    sqlx::query(
-        r#"
-        CREATE TABLE IF NOT EXISTS t_mod_group_mods (
-            group_id INTEGER NOT NULL,
-            mod_id INTEGER NOT NULL,
-            is_activated BOOLEAN NOT NULL DEFAULT TRUE,
-            PRIMARY KEY (group_id, mod_id)
+            unique_id TEXT NOT NULL,
+            version TEXT NOT NULL,
+
+            name TEXT NOT NULL,
+            author TEXT,
+            description TEXT,
+            entry_dll TEXT,
+            minimum_api_version TEXT,
+            update_keys TEXT,
+
+            enabled BOOLEAN NOT NULL DEFAULT 0,
+            source_folder_name TEXT NOT NULL,
+            storage_path TEXT NOT NULL,
+            created_at INTEGER NOT NULL,
+
+            UNIQUE(unique_id, version)
         );
         "#
     )
