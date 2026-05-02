@@ -12,20 +12,30 @@ use tauri::command;
 use crate::AppState;
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "PascalCase")]
 struct Manifest {
+    #[serde(rename = "Name")]
     name: String,
-    #[serde(default)]
+
+    #[serde(rename = "Author", default)]
     author: Option<String>,
+
+    #[serde(rename = "Version")]
     version: String,
-    #[serde(default)]
+
+    #[serde(rename = "Description", default)]
     description: Option<String>,
+
+    // SMAPI 常见字段为 UniqueID（大写 D），也兼容 UniqueId
+    #[serde(rename = "UniqueID", alias = "UniqueId")]
     unique_id: String,
-    #[serde(default)]
+
+    #[serde(rename = "EntryDll", alias = "EntryDLL", default)]
     entry_dll: Option<String>,
-    #[serde(default)]
+
+    #[serde(rename = "MinimumApiVersion", alias = "MinimumAPIVersion", default)]
     minimum_api_version: Option<String>,
-    #[serde(default)]
+
+    #[serde(rename = "UpdateKeys", default)]
     update_keys: Option<serde_json::Value>,
 }
 
@@ -37,9 +47,9 @@ pub struct ModDto {
     pub name: String,
     pub author: Option<String>,
     pub description: Option<String>,
+    pub minimum_api_version: Option<String>,
+    pub update_keys: String,
     pub enabled: bool,
-    pub source_folder_name: String,
-    pub created_at: i64,
 }
 
 #[derive(Debug, Serialize)]
@@ -215,6 +225,22 @@ async fn set_enabled_internal(
     Ok(())
 }
 
+/// 在更换或清除「游戏路径」写入数据库之前调用：依赖当前库中的 `game_path`，
+/// 对每个已启用模组执行禁用逻辑，以删除旧游戏目录 `Mods` 下的链接。
+pub async fn disable_all_enabled_mods(state: &AppState) -> Result<(), String> {
+    let ids: Vec<i64> = sqlx::query_scalar(
+        "SELECT id FROM t_mods WHERE enabled != 0 ORDER BY id",
+    )
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    for id in ids {
+        set_enabled_internal(state, id, false).await?;
+    }
+    Ok(())
+}
+
 #[command]
 pub async fn mods_list(
     state: tauri::State<'_, AppState>,
@@ -268,7 +294,9 @@ pub async fn mods_list(
     let mut qb: QueryBuilder<sqlx::Sqlite> = QueryBuilder::new(
         r#"
         SELECT
-          id, unique_id, version, name, author, description, enabled, source_folder_name, created_at
+          id, unique_id, version, name, author, description,
+          minimum_api_version, update_keys,
+          enabled
         FROM t_mods
         "#,
     );
@@ -311,9 +339,9 @@ pub async fn mods_list(
             name: r.get("name"),
             author: r.get("author"),
             description: r.get("description"),
+            minimum_api_version: r.get("minimum_api_version"),
+            update_keys: r.get("update_keys"),
             enabled: (r.get::<i64, _>("enabled")) != 0,
-            source_folder_name: r.get("source_folder_name"),
-            created_at: r.get("created_at"),
         })
         .collect();
 
@@ -332,10 +360,32 @@ pub async fn mods_add(
 
     let source_folder_name = file_name_string(&folder)?;
     let manifest_path = folder.join("manifest.json");
-    let manifest_content = fs::read_to_string(&manifest_path)
-        .map_err(|_| "读取 manifest.json 失败，请确认该文件存在".to_string())?;
+    let manifest_content = fs::read_to_string(&manifest_path).map_err(|e| {
+        format!(
+            "读取 manifest.json 失败（{}）: {}",
+            manifest_path.to_string_lossy(),
+            e
+        )
+    })?;
+
+    let manifest_content = manifest_content
+        .trim_start_matches('\u{feff}')
+        .trim()
+        .to_string();
+
+    if manifest_content.is_empty() {
+        return Err(format!(
+            "manifest.json 为空或仅包含空白字符（{}）",
+            manifest_path.to_string_lossy()
+        ));
+    }
     let manifest: Manifest =
-        serde_json::from_str(&manifest_content).map_err(|e| format!("解析 manifest.json 失败: {e}"))?;
+        serde_json::from_str(&manifest_content).map_err(|e| {
+            format!(
+                "解析 manifest.json 失败（{}）: {e}",
+                manifest_path.to_string_lossy()
+            )
+        })?;
 
     // 判重：UniqueID + Version
     let exists = sqlx::query_scalar::<_, i64>(
@@ -397,7 +447,7 @@ pub async fn mods_add(
     .bind(manifest.description.as_deref())
     .bind(manifest.entry_dll.as_deref())
     .bind(manifest.minimum_api_version.as_deref())
-    .bind(update_keys_str)
+    .bind(&update_keys_str)
     .bind(&source_folder_name)
     .bind(storage_dir.to_string_lossy().to_string())
     .bind(created_at)
@@ -418,9 +468,9 @@ pub async fn mods_add(
         name: manifest.name,
         author: manifest.author,
         description: manifest.description,
+        minimum_api_version: manifest.minimum_api_version,
+        update_keys: update_keys_str,
         enabled: false,
-        source_folder_name,
-        created_at,
     })
 }
 

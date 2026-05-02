@@ -60,121 +60,123 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="page">
-    <div class="header">
-      <h1 class="title">设置</h1>
-      <p class="desc">管理游戏目录等基础配置（后续可扩展更多设置项）。</p>
-    </div>
-
-    <ElCard class="card" shadow="never">
+  <section class="settings-page">
+    <ElCard class="settings-card" shadow="never">
       <template #header>
-        <div class="cardHeader">
-          <div class="cardTitle">游戏目录</div>
-        </div>
+        <span class="section-title">游戏目录</span>
       </template>
 
-      <div class="row">
-        <div class="label">Stardew Valley 路径</div>
-        <div class="value">
-          <ElText v-if="hasGamePath" class="path" truncated>
-            {{ gamePath }}
-          </ElText>
-          <ElText v-else type="info">未设置</ElText>
+      <div class="setting-row">
+        <div class="setting-label">
+          <span class="setting-label-main">Stardew Valley 路径</span>
+        </div>
+        <div class="setting-main">
+          <p class="setting-value" :class="{ 'is-placeholder': !hasGamePath }" :title="gamePath ?? undefined">
+            {{ hasGamePath ? gamePath : "未设置" }}
+          </p>
+          <div class="setting-actions">
+            <ElButton type="primary" :loading="loading" @click="onPickGamePath">选择目录</ElButton>
+            <ElButton :disabled="!hasGamePath" :loading="loading" @click="onClearGamePath">
+              清除
+            </ElButton>
+          </div>
         </div>
       </div>
-
-      <div class="actions">
-        <ElButton type="primary" :loading="loading" @click="onPickGamePath">选择目录</ElButton>
-        <ElButton :disabled="!hasGamePath" :loading="loading" @click="onClearGamePath">
-          清除
-        </ElButton>
-      </div>
-
-      <ElAlert
-        type="info"
-        :closable="false"
-        show-icon
-        class="tip"
-        title="说明"
-        description="模组启用/禁用需要该目录，用于在游戏 Mods 文件夹中创建/删除链接。"
-      />
     </ElCard>
   </section>
 </template>
 
 <style scoped>
-.page {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+.settings-page {
   min-width: 0;
+  max-width: 720px;
 }
 
-.header {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.settings-card {
+  border-radius: 8px;
 }
 
-.title {
-  margin: 0;
-  font-size: 20px;
-}
-
-.desc {
-  margin: 0;
-  opacity: 0.75;
-}
-
-.card {
-  border-radius: 14px;
-}
-
-.cardHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-width: 0;
-}
-
-.cardTitle {
-  font-weight: 700;
-}
-
-.row {
-  display: grid;
-  grid-template-columns: 160px 1fr;
-  gap: 12px;
-  align-items: center;
-  min-width: 0;
-}
-
-.label {
+.section-title {
+  font-size: 15px;
   font-weight: 600;
-  opacity: 0.85;
+  color: var(--el-text-color-primary);
 }
 
-.value {
-  min-width: 0;
-}
-
-.path {
-  max-width: 100%;
-}
-
-.actions {
+.setting-row {
   display: flex;
-  gap: 10px;
-  margin-top: 14px;
+  align-items: center;
+  gap: 20px;
+  min-height: 40px;
 }
 
-.tip {
-  margin-top: 14px;
+.setting-label {
+  flex: 0 0 168px;
+  padding-top: 1px;
 }
 
-@media (max-width: 720px) {
-  .row {
-    grid-template-columns: 1fr;
+.setting-label-main {
+  display: block;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--el-text-color-regular);
+}
+
+.setting-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.setting-value {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--el-text-color-primary);
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.setting-value.is-placeholder {
+  color: var(--el-text-color-placeholder);
+}
+
+.setting-actions {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 560px) {
+  .setting-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .setting-label {
+    flex: none;
+  }
+
+  .setting-main {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+
+  .setting-value {
+    text-align: left;
+  }
+
+  .setting-actions {
+    justify-content: flex-start;
   }
 }
 </style>
