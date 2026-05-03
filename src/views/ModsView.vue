@@ -177,15 +177,6 @@ onMounted(async () => {
       <ElButton type="primary" @click="onAddMod">添加模组</ElButton>
     </div>
 
-    <ElAlert
-      v-if="!hasGamePath"
-      type="warning"
-      :closable="false"
-      show-icon
-      title="尚未设置游戏目录：启用/禁用功能将被限制"
-      description="请前往「设置」选择 Stardew Valley 游戏目录。"
-    />
-
     <ElTable :data="items" v-loading="loading" row-key="id">
       <ElTableColumn prop="name" label="名称" min-width="160" show-overflow-tooltip />
       <ElTableColumn prop="version" label="版本" width="100" />
