@@ -69,7 +69,7 @@ const isActive = (to: string) => activeIndex.value === to;
           :hide-after="0"
           transition=""
         >
-          <RouterLink class="link" :to="item.to">
+          <RouterLink class="link" :to="item.to" draggable="false">
             <ElButton
               class="menuBtn"
               text
@@ -162,6 +162,7 @@ const isActive = (to: string) => activeIndex.value === to;
   display: block;
   text-decoration: none;
   color: inherit;
+  -webkit-user-drag: none;
 }
 
 .icon {
