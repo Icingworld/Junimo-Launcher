@@ -5,6 +5,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+use json_comments::StripComments;
 use serde::{Deserialize, Serialize};
 use sqlx::{sqlite::SqliteRow, QueryBuilder, Row};
 use tauri::command;
@@ -380,7 +381,7 @@ pub async fn mods_add(
         ));
     }
     let manifest: Manifest =
-        serde_json::from_str(&manifest_content).map_err(|e| {
+        serde_json::from_reader(StripComments::new(manifest_content.as_bytes())).map_err(|e| {
             format!(
                 "解析 manifest.json 失败（{}）: {e}",
                 manifest_path.to_string_lossy()
