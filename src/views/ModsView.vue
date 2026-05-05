@@ -217,20 +217,34 @@ onMounted(async () => {
     </div>
 
     <ElDialog v-model="detailVisible" title="模组详情" width="560px" destroy-on-close>
-      <template v-if="detailMod">
+      <div v-if="detailMod" class="mod-detail-body">
         <ElDescriptions :column="1" border>
-          <ElDescriptionsItem label="名称">{{ detailMod.name }}</ElDescriptionsItem>
-          <ElDescriptionsItem label="版本">{{ detailMod.version }}</ElDescriptionsItem>
-          <ElDescriptionsItem label="UniqueID">{{ detailMod.unique_id }}</ElDescriptionsItem>
-          <ElDescriptionsItem label="作者">{{ detailMod.author || "-" }}</ElDescriptionsItem>
-          <ElDescriptionsItem label="描述">{{ detailMod.description || "-" }}</ElDescriptionsItem>
-          <ElDescriptionsItem label="MinimumApiVersion">
-            {{ detailMod.minimum_api_version || "-" }}
+          <ElDescriptionsItem label="名称">
+            <div class="mod-detail-value">{{ detailMod.name }}</div>
           </ElDescriptionsItem>
-          <ElDescriptionsItem label="UpdateKeys">{{ detailMod.update_keys }}</ElDescriptionsItem>
-          <ElDescriptionsItem label="状态">{{ detailMod.enabled ? "已启用" : "未启用" }}</ElDescriptionsItem>
+          <ElDescriptionsItem label="版本">
+            <div class="mod-detail-value">{{ detailMod.version }}</div>
+          </ElDescriptionsItem>
+          <ElDescriptionsItem label="模组ID">
+            <div class="mod-detail-value">{{ detailMod.unique_id }}</div>
+          </ElDescriptionsItem>
+          <ElDescriptionsItem label="作者">
+            <div class="mod-detail-value">{{ detailMod.author || "-" }}</div>
+          </ElDescriptionsItem>
+          <ElDescriptionsItem label="描述">
+            <div class="mod-detail-value">{{ detailMod.description || "-" }}</div>
+          </ElDescriptionsItem>
+          <ElDescriptionsItem label="最小SMAPI版本">
+            <div class="mod-detail-value">{{ detailMod.minimum_api_version || "-" }}</div>
+          </ElDescriptionsItem>
+          <ElDescriptionsItem label="更新方式">
+            <div class="mod-detail-value">{{ detailMod.update_keys }}</div>
+          </ElDescriptionsItem>
+          <ElDescriptionsItem label="状态">
+            <div class="mod-detail-value">{{ detailMod.enabled ? "已启用" : "未启用" }}</div>
+          </ElDescriptionsItem>
         </ElDescriptions>
-      </template>
+      </div>
       <template #footer>
         <ElButton type="primary" @click="detailVisible = false">关闭</ElButton>
       </template>
@@ -291,5 +305,26 @@ onMounted(async () => {
   display: flex;
   justify-content: flex-end;
   flex-wrap: wrap;
+}
+
+/* 详情弹窗：避免 ElDescriptions 表格被长文本撑出弹窗 */
+.mod-detail-body :deep(.el-descriptions__body table) {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.mod-detail-body :deep(.el-descriptions__label) {
+  width: 148px;
+  vertical-align: top;
+}
+
+.mod-detail-body :deep(.el-descriptions__content) {
+  vertical-align: top;
+}
+
+.mod-detail-value {
+  min-width: 0;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 </style>

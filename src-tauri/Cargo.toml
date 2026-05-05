@@ -27,3 +27,6 @@ json_comments = "0.2"
 sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio-rustls", "sqlite", "macros"] }
 opener = "0.8.4"
 
+[target."cfg(windows)".dependencies]
+junction = { version = "2.0.0", default-features = false }
+

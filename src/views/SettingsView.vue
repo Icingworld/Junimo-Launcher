@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
+import { openPath } from "@tauri-apps/plugin-opener";
 import { ElMessage } from "element-plus";
 import { computed, onMounted, ref } from "vue";
 
@@ -54,6 +55,16 @@ async function onClearGamePath() {
   }
 }
 
+async function onOpenGamePath() {
+  const path = gamePath.value;
+  if (!path || loading.value) return;
+  try {
+    await openPath(path);
+  } catch (e) {
+    ElMessage.error(e instanceof Error ? e.message : String(e));
+  }
+}
+
 onMounted(() => {
   void refresh();
 });
@@ -76,6 +87,7 @@ onMounted(() => {
           </p>
           <div class="setting-actions">
             <ElButton type="primary" :loading="loading" @click="onPickGamePath">选择目录</ElButton>
+            <ElButton :disabled="!hasGamePath" :loading="loading" @click="onOpenGamePath">打开目录</ElButton>
             <ElButton :disabled="!hasGamePath" :loading="loading" @click="onClearGamePath">
               清除
             </ElButton>

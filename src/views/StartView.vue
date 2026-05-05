@@ -45,18 +45,6 @@ onMounted(async () => {
   const page = pageEl.value;
   const actions = actionsEl.value;
   if (!page || !actions) return;
-
-  const pageRect = page.getBoundingClientRect();
-  const actionsRect = actions.getBoundingClientRect();
-  const actionsStyle = window.getComputedStyle(actions);
-
-  // 这段日志用于对比 Web(1420) 与 Tauri WebView 的布局差异
-  console.log("[StartView layout]", {
-    viewport: { innerWidth: window.innerWidth, innerHeight: window.innerHeight, dpr: window.devicePixelRatio },
-    pageRect: { top: pageRect.top, left: pageRect.left, width: pageRect.width, height: pageRect.height },
-    actionsRect: { top: actionsRect.top, left: actionsRect.left, width: actionsRect.width, height: actionsRect.height },
-    actionsComputed: { right: actionsStyle.right, bottom: actionsStyle.bottom, position: actionsStyle.position },
-  });
 });
 </script>
 
@@ -74,8 +62,8 @@ onMounted(async () => {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.65)),
-    url("/start-bg.jpg") center / cover no-repeat;
+    linear-gradient(180deg, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.15)),
+    url("/start_bg.jpg") center / cover no-repeat;
   filter: saturate(1.05);
   transform: scale(1.02);
 }

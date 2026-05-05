@@ -123,6 +123,15 @@ async fn get_game_path(state: &AppState) -> Result<PathBuf, String> {
     Ok(PathBuf::from(path))
 }
 
+fn format_io_error(e: std::io::Error) -> String {
+    let mut s = e.to_string();
+    if let Some(code) = e.raw_os_error() {
+        s.push_str(&format!("（Windows 错误码 {}）", code));
+    }
+    s.push_str(&format!(" [{:?}]", e.kind()));
+    s
+}
+
 fn remove_link_path(link_path: &Path) -> Result<(), String> {
     // 使用 symlink_metadata：即使链接断了也能识别出来
     if fs::symlink_metadata(link_path).is_err() {
@@ -139,30 +148,26 @@ fn remove_link_path(link_path: &Path) -> Result<(), String> {
 
 #[cfg(windows)]
 fn create_dir_link(link_path: &Path, target_path: &Path) -> Result<(), String> {
-    // mklink 是 cmd 内建命令，需通过 cmd /C 调用
-    let link = link_path
-        .to_str()
-        .ok_or_else(|| "link_path 非法".to_string())?;
-    let target = target_path
-        .to_str()
-        .ok_or_else(|| "target_path 非法".to_string())?;
-
-    let cmd_str = format!(r#"mklink /J "{}" "{}""#, link, target);
-    let status = std::process::Command::new("cmd")
-        .args(["/C", &cmd_str])
-        .status()
-        .map_err(|e| e.to_string())?;
-
-    if status.success() {
-        Ok(())
-    } else {
-        Err("创建 junction 失败（mklink /J）".to_string())
+    if !target_path.is_dir() {
+        return Err(format!(
+            "模组存储目录不存在或不是文件夹：{}",
+            target_path.display()
+        ));
     }
+
+    junction::create(target_path, link_path).map_err(|e| {
+        format!(
+            "创建目录联接失败：{} — 链接「{}」→ 目标「{}」",
+            format_io_error(e),
+            link_path.display(),
+            target_path.display()
+        )
+    })
 }
 
 #[cfg(unix)]
 fn create_dir_link(link_path: &Path, target_path: &Path) -> Result<(), String> {
-    std::os::unix::fs::symlink(target_path, link_path).map_err(|e| e.to_string())
+    std::os::unix::fs::symlink(target_path, link_path).map_err(format_io_error)
 }
 
 async fn set_enabled_internal(
